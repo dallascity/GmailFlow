@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Menu, ipcMain, safeStorage, shell, dialog, nativeTheme, Notification } from 'electron';
+import { app, BrowserWindow, Menu, ipcMain, safeStorage, shell, dialog, nativeTheme, Notification, nativeImage } from 'electron';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
@@ -8,13 +8,17 @@ const isDev = Boolean(process.env.VITE_DEV_SERVER_URL);
 
 // Paketlenmiş uygulamada ikon asar dışında resources/ içinde,
 // geliştirme modunda ise build/ klasöründe bulunur.
+// Windows taskbar .ico gerektirir; bildirimler için .png kullanılır.
 const appIcon = isDev
+  ? path.join(__dirname, '..', 'build', 'icon.ico')
+  : path.join(process.resourcesPath, 'icon.ico');
+const notifIcon = isDev
   ? path.join(__dirname, '..', 'build', 'icon.png')
   : path.join(process.resourcesPath, 'icon.png');
 
 // Kullanıcı verileri: %APPDATA%\GmailFlow (güncelleme / yeniden kurulumda korunur)
 app.setName('GmailFlow');
-app.setAppUserModelId('com.gmailflow.app');
+app.setAppUserModelId(isDev ? 'com.gmailflow.dev' : 'com.gmailflow.desktop');
 if (process.env.GMAILFLOW_DATA_DIR) app.setPath('userData', path.resolve(process.env.GMAILFLOW_DATA_DIR));
 
 if (!app.requestSingleInstanceLock()) {
@@ -59,6 +63,7 @@ if (!app.requestSingleInstanceLock()) {
   }
 
   function createWindow(port) {
+    const windowIcon = nativeImage.createFromPath(appIcon);
     mainWindow = new BrowserWindow({
       width: 1280,
       height: 820,
@@ -68,7 +73,7 @@ if (!app.requestSingleInstanceLock()) {
       title: 'GmailFlow',
       backgroundColor: nativeTheme.shouldUseDarkColors ? '#16181d' : '#f6f7fb',
       autoHideMenuBar: true,
-      icon: appIcon,
+      icon: windowIcon,
       webPreferences: {
         preload: path.join(__dirname, 'preload.cjs'),
         contextIsolation: true,
@@ -92,7 +97,10 @@ if (!app.requestSingleInstanceLock()) {
         if (/^https?:\/\//i.test(url)) shell.openExternal(url);
       }
     });
-    mainWindow.once('ready-to-show', () => mainWindow.show());
+    mainWindow.once('ready-to-show', () => {
+      mainWindow.setIcon(windowIcon);
+      mainWindow.show();
+    });
     mainWindow.loadURL(appUrl);
     if (isDev) mainWindow.webContents.openDevTools({ mode: 'detach' });
   }
@@ -127,7 +135,7 @@ if (!app.requestSingleInstanceLock()) {
   function setupMailNotifications(ctx) {
     let buffer = [];
     let timer = null;
-    const icon = appIcon;
+    const icon = notifIcon;
     const tr = () => (ctx.settings.get('language') ?? (app.getLocale().startsWith('tr') ? 'tr' : 'en')) === 'tr';
     const openThread = (threadId) => {
       if (!mainWindow) return;

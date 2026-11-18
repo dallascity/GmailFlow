@@ -1,4 +1,4 @@
-appId: com.gmailflow.app
+appId: com.gmailflow.desktop
 productName: GmailFlow
 copyright: Copyright © 2026 GmailFlow
 
@@ -20,6 +20,8 @@ asar: true
 compression: normal
 
 extraResources:
+  - from: build/icon.ico
+    to: icon.ico
   - from: build/icon.png
     to: icon.png
 
