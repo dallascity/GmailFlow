@@ -1,0 +1,49 @@
+appId: com.gmailflow.app
+productName: GmailFlow
+copyright: Copyright © 2026 GmailFlow
+
+directories:
+  output: dist
+  buildResources: build
+
+# Yalnızca çalışma zamanında gereken dosyalar pakete girer.
+# Arayüz kaynak kodu (renderer/), testler ve Docker dosyaları dahil edilmez.
+files:
+  - package.json
+  - electron/**
+  - server/**
+  - dist-renderer/**
+  - build/icon.png
+  - '!**/*.map'
+
+asar: true
+compression: normal
+
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  icon: build/icon.ico
+  # İmzalama: CSC_LINK (.pfx yolu veya base64) ve CSC_KEY_PASSWORD ortam değişkenleri
+  # tanımlıysa electron-builder kurulum dosyasını ve uygulamayı otomatik imzalar.
+  signtoolOptions:
+    signingHashAlgorithms: [sha256]
+    rfc3161TimeStampServer: http://timestamp.digicert.com
+
+nsis:
+  artifactName: GmailFlow-Setup-${arch}.exe
+  oneClick: false
+  perMachine: false
+  allowElevation: true
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: GmailFlow
+  installerIcon: build/icon.ico
+  uninstallerIcon: build/icon.ico
+  # Kullanıcı verileri (%APPDATA%\GmailFlow) kaldırma/güncelleme sırasında SİLİNMEZ.
+  deleteAppDataOnUninstall: false
+  runAfterFinish: true
+  language: '1055'
+  multiLanguageInstaller: true
+  installerLanguages: [tr_TR, en_US]

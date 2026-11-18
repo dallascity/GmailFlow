@@ -1,0 +1,34 @@
+# Geliştirme ortamı:  docker compose up --build   →  http://localhost:5173
+# Portlar doluysa:     API_PORT=3300 WEB_PORT=5273 docker compose up
+services:
+  dev:
+    build: .
+    image: gmailflow-dev
+    container_name: gmailflow-dev
+    ports:
+      # Yalnızca bu bilgisayardan erişilebilir. OAuth yönlendirmesi 127.0.0.1:3000'e gelir.
+      - '127.0.0.1:${API_PORT:-3000}:3000'
+      - '127.0.0.1:${WEB_PORT:-5173}:5173'
+    environment:
+      PUBLIC_ORIGIN: http://127.0.0.1:${API_PORT:-3000}
+      GMAILFLOW_LOCALE: tr
+      LOG_LEVEL: info
+    volumes:
+      - .:/app
+      # Konteynerin node_modules'u ana makineninkinden ayrı tutulur.
+      - node_modules:/app/node_modules
+      # SQLite veritabanı, ekler ve geliştirme sırları
+      - ./.devdata:/data
+    command: npm run dev:web
+    restart: unless-stopped
+
+  test:
+    image: gmailflow-dev
+    profiles: [test]
+    volumes:
+      - .:/app
+      - node_modules:/app/node_modules
+    command: npm test
+
+volumes:
+  node_modules:
