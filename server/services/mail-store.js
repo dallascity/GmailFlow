@@ -191,9 +191,13 @@ export class MailStore {
       args.push(JSON.stringify(threadIds));
     } else if (label === 'ALL') {
       where.push("NOT EXISTS (SELECT 1 FROM mail_message_labels x WHERE x.message_id = m.id AND x.label_id IN ('SPAM','TRASH'))");
+    } else if (label === 'TRASH' || label === 'SPAM') {
+      join = 'JOIN mail_message_labels l ON l.message_id = m.id AND l.label_id = ?';
+      args.unshift(label);
     } else if (label) {
       join = 'JOIN mail_message_labels l ON l.message_id = m.id AND l.label_id = ?';
       args.unshift(label);
+      where.push("NOT EXISTS (SELECT 1 FROM mail_message_labels x WHERE x.message_id = m.id AND x.label_id IN ('SPAM','TRASH'))");
     }
     const fq = ftsQuery(q);
     if (fq) {
