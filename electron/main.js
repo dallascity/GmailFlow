@@ -6,6 +6,12 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const isDev = Boolean(process.env.VITE_DEV_SERVER_URL);
 
+// Paketlenmiş uygulamada ikon asar dışında resources/ içinde,
+// geliştirme modunda ise build/ klasöründe bulunur.
+const appIcon = isDev
+  ? path.join(__dirname, '..', 'build', 'icon.png')
+  : path.join(process.resourcesPath, 'icon.png');
+
 // Kullanıcı verileri: %APPDATA%\GmailFlow (güncelleme / yeniden kurulumda korunur)
 app.setName('GmailFlow');
 app.setAppUserModelId('com.gmailflow.app');
@@ -62,7 +68,7 @@ if (!app.requestSingleInstanceLock()) {
       title: 'GmailFlow',
       backgroundColor: nativeTheme.shouldUseDarkColors ? '#16181d' : '#f6f7fb',
       autoHideMenuBar: true,
-      icon: path.join(__dirname, '..', 'build', 'icon.png'),
+      icon: appIcon,
       webPreferences: {
         preload: path.join(__dirname, 'preload.cjs'),
         contextIsolation: true,
@@ -121,7 +127,7 @@ if (!app.requestSingleInstanceLock()) {
   function setupMailNotifications(ctx) {
     let buffer = [];
     let timer = null;
-    const icon = path.join(__dirname, '..', 'build', 'icon.png');
+    const icon = appIcon;
     const tr = () => (ctx.settings.get('language') ?? (app.getLocale().startsWith('tr') ? 'tr' : 'en')) === 'tr';
     const openThread = (threadId) => {
       if (!mainWindow) return;
